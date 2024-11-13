@@ -35,16 +35,31 @@ input[type='text'] {
   border: 1px solid #ccc;
 }
 
-button {
+.button {
   padding: 10px 20px;
-  background-color: #0073e6;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   min-width: 200px;
-  margin: 5px;
+  margin: 5px 10px;
   transition: background-color 0.3s ease;
+}
+
+.button-info {
+  background-color: #67b0c6;
+}
+
+.button-success {
+  background-color: #59b259;
+}
+
+.button-info:hover {
+  background-color: #00539c;
+}
+
+.button-success:hover:enabled {
+  background-color: #3e8e41;
 }
 
 button:disabled {
@@ -52,8 +67,8 @@ button:disabled {
   cursor: not-allowed;
 }
 
-button:hover:enabled {
-  background-color: #00539c;
+.icon-with-margin {
+  margin-right: 5px;
 }
 
 .loading {

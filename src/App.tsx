@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFolderOpen, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 declare global {
   interface Window {
@@ -39,6 +41,7 @@ const App: React.FC = () => {
       await window.electron.invoke('export-data', dbPath);
     } catch (error: any) {
       setMessage(`Erro: ${error.message}`);
+      setLoading(false);
     }
   };
 
@@ -69,6 +72,7 @@ const App: React.FC = () => {
 
     const handleExportError = (_event: any, errorMessage: string) => {
       setMessage(`Erro: ${errorMessage}`);
+      setLoading(false);
     };
 
     window.electron.on('export-success', handleExportSuccess);
@@ -92,7 +96,7 @@ const App: React.FC = () => {
       />
       <h1>Conversor de Dados Firebird para Excel</h1>
       <form onSubmit={handleSubmit}>
-        <label htmlFor='db_path'>Cole o caminho completo do Banco de Dados:</label>
+        <label htmlFor='db_path'>Informe o caminho completo do Banco de Dados:</label>
         <input
           type='text'
           id='db_path'
@@ -101,10 +105,14 @@ const App: React.FC = () => {
           placeholder='/caminho/para/seubanco.fb'
           required
         />
-        <button type='button' onClick={handleSelectDatabase}>
+        <button type='button' onClick={handleSelectDatabase} className='button button-info'>
+          <FontAwesomeIcon icon={faFolderOpen} className='icon-with-margin' />
           Selecionar Banco de Dados
         </button>
-        <button type='submit'>Exportar</button>
+        <button type='submit' className='button button-success' disabled={!dbPath || loading}>
+          <FontAwesomeIcon icon={faCheck} className='icon-with-margin' />
+          Exportar
+        </button>
       </form>
       <div id='message' className={message ? 'error' : success ? 'success' : ''}>
         {loading && (
