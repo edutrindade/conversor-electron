@@ -1,4 +1,3 @@
-
 # Conversor de Dados Firebird para Excel com Electron
 
 Este projeto é uma aplicação desktop desenvolvida com **Electron** que permite a exportação de dados de um banco de dados Firebird específico para um arquivo Excel. A aplicação oferece uma interface simples e intuitiva para facilitar a exportação e importação de dados.
@@ -60,8 +59,7 @@ npm run electron
 * **Selecionar Banco de Dados** : Clique no botão "Selecionar Banco de Dados" para escolher o arquivo do banco de dados Firebird. Opcionalmente, você pode digitar também o caminho do banco.
 * **Exportar Dados** : Clique no botão "Exportar" para iniciar o processo de conversão. Um arquivo Excel será gerado e disponibilizado para download.
 
-    ![1731455350617](image/README/1731455350617.png)	![1731455559835](image/README/1731455559835.png)
-
+  ![1731455350617](image/README/1731455350617.png)	![1731455559835](image/README/1731455559835.png)![1731466201883](image/README/1731466201883.png)
 
 ## Construção do Executável
 
