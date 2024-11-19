@@ -167,12 +167,14 @@ function exportToExcel(rows) {
       { header: 'Largura', key: 'largura', width: 30 },
       { header: 'Comprimento', key: 'comprimento', width: 30 },
       { header: 'Importado por balança', key: 'importadoBalanca', width: 30 },
+      { header: 'Produto vendido por (balança)', key: 'vendidoBalanca', width: 30 },
       { header: 'Quantidade mínima', key: 'quantidadeMinima', width: 30 },
       { header: 'Quantidade máxima', key: 'quantidadeMaxima', width: 30 },
       { header: 'Quantidade compra', key: 'quantidadeCompra', width: 30 },
       { header: 'Observação', key: 'observacao', width: 30 },
       { header: 'Código de barras', key: 'codigoBarras', width: 30 },
       { header: 'Características', key: 'caracteristicas', width: 30 },
+      { header: 'Status', key: 'status', width: 30 },
     ];
 
     // Mapeamento das chaves do row para as chaves do worksheet
@@ -234,12 +236,14 @@ function exportToExcel(rows) {
       Largura: 'largura',
       Comprimento: 'comprimento',
       'Importado por balança': 'importadoBalanca',
+      'Produto vendido por (balança)': 'vendidoBalanca',
       'Quantidade mínima': 'quantidadeMinima',
       'Quantidade máxima': 'quantidadeMaxima',
       'Quantidade compra': 'quantidadeCompra',
       Observação: 'observacao',
       'Código de barras': 'codigoBarras',
       Características: 'caracteristicas',
+      Status: 'status',
     };
 
     // Adicionar linhas ao arquivo Excel
@@ -347,12 +351,14 @@ ipcMain.handle('export-data', async (event, dbPath) => {
             '' AS "Largura",
             '' AS "Comprimento",
             '' AS "Importado por balança",
+            '' AS "Produto vendido por (balança)",
             p.ESTMINIMO AS "Quantidade mínima",
             p.ESTMAXIMO AS "Quantidade máxima",
             '' AS "Quantidade compra",
             p.OBSERVACAO AS "Observação",
             p.REFFABRICANTE AS "Código de barras",
-            '' AS "Características"
+            '' AS "Características",
+            '1' AS "Status"
         FROM 
             PRODUTO p
         LEFT JOIN 

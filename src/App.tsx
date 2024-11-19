@@ -94,7 +94,7 @@ const App: React.FC = () => {
         className='logo'
         width='150'
       />
-      <h1>Conversor de Dados Firebird para Excel</h1>
+      <h1>Exportador de Produtos - Firebird para Excel</h1>
       <form onSubmit={handleSubmit}>
         <label htmlFor='db_path'>Informe o caminho completo do Banco de Dados:</label>
         <input
@@ -117,10 +117,11 @@ const App: React.FC = () => {
       <div id='message' className={message ? 'error' : success ? 'success' : ''}>
         {loading && (
           <div className='progress'>
-            <span>
-              {current}/{total}
+            {/* <span>
+              {current}/{total} 
             </span>
-            <progress value={progress} max='100'></progress>
+            <progress value={progress} max='100'></progress> */}
+            <span className='progress-title'>Por favor, aguarde...</span>
           </div>
         )}
         {success && <span className='message'>{success}</span>}

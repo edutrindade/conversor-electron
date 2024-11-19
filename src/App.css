@@ -1,7 +1,7 @@
 body {
   font-family: Arial, sans-serif;
   background-color: #eee;
-  background-image: url('assets/background.png');
+  background-image: url("assets/background.png");
   background-size: cover;
   background-position: center;
   margin: 0;
@@ -27,7 +27,7 @@ h1 {
   color: #00539c;
   margin: 10px 0;
 }
-input[type='text'] {
+input[type="text"] {
   margin: 20px 0;
   width: 100%;
   padding: 8px;
@@ -121,4 +121,14 @@ button:disabled {
 
 .message {
   font-size: 13px;
+}
+
+.progress {
+  margin-top: 20px;
+}
+
+.progress-title {
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: #5a5858;
 }
