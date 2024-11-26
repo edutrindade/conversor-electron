@@ -324,7 +324,7 @@ ipcMain.handle('export-data', async (event, dbPath) => {
             '' AS "Substituição tributária (R$)",
             '' AS "Diferencial ICMS (R$)",
             '' AS "Mark-up (%)",
-            p.PRECO AS "Preço de venda R$",
+            COALESCE(pg.PRECOGRADE, p.PRECO) AS "Preço de venda R$",
             'S' AS "Permite desconto",
             '' AS "Comissão %",
             '' AS "Configuração tributária",
@@ -356,7 +356,7 @@ ipcMain.handle('export-data', async (event, dbPath) => {
             p.ESTMAXIMO AS "Quantidade máxima",
             '' AS "Quantidade compra",
             p.OBSERVACAO AS "Observação",
-            p.REFFABRICANTE AS "Código de barras",
+            COALESCE(pg.CODBARRA, p.REFERENCIA) AS "Código de barras",
             '' AS "Características",
             '1' AS "Status"
         FROM 
@@ -377,6 +377,8 @@ ipcMain.handle('export-data', async (event, dbPath) => {
             FAMILIA fam ON p.CODFAMILIA = fam.CODIGO
         LEFT JOIN 
             EMPRESA e ON 1=1  -- Este JOIN continua como está, pois você assume que sempre há uma empresa
+        LEFT JOIN 
+            PRODGRADE pg ON p.CODPROD = pg.CODPROD AND cp.CODGRADE = pg.CODGRADE   
         WHERE 
             p.ATIVO = 'S';`;
 
