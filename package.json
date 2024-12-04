@@ -1,8 +1,8 @@
 {
   "name": "electron-linx-conversor",
-  "productName": "Conversor de Produtos Linx",
+  "productName": "Conversor de Dados Linx",
   "author": "Eduardo Trindade",
-  "description": "Conversor de Produtos Linx",
+  "description": "Conversor de Dados Linx",
   "private": true,
   "version": "0.0.1",
   "type": "module",
