@@ -1,5 +1,5 @@
 export const queryProducts = `SELECT 
-            '' AS "Código",
+            p.CODPROD AS "Código",
             p.DESCRICAO AS "Descrição",
             p.REFFABRICANTE AS "Referência",
             '' AS "Cód. Auxiliar",
