@@ -22,5 +22,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "assets"]
+  "include": ["src", "assets", "main.js", "preload.js"],
+  "exclude": ["node_modules", "dist", "build", "electron-builder", "coverage", "vite"]
 }
