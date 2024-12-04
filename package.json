@@ -20,9 +20,14 @@
     "appId": "com.axxos.conversor",
     "files": [
       "dist/**/*",
+      "src/**/*",
       "main.js",
       "preload.js",
       "package.json"
+    ],
+    "extraResources": [
+      "src/helpers/database.js",
+      "src/utils/**/*"
     ],
     "win": {
       "icon": "assets/icon.ico",
