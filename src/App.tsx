@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -28,11 +30,15 @@ const App: React.FC = () => {
   const [message, setMessage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [success, setSuccess] = useState<string>("");
+  const [progress, setProgress] = useState<{ processed: number; total: number } | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
 
   const handleSelectDatabase = async () => {
     setMessage("");
     setSuccess("");
     setLoading(false);
+    setProgress(null);
+    setSaving(false);
 
     const path = await window.electron.invoke("select-database");
     console.log("path", path);
@@ -48,10 +54,26 @@ const App: React.FC = () => {
     setMessage("");
     setSuccess("");
     setLoading(true);
+    setProgress(null);
+    setSaving(false);
+
     try {
+      // Inicia a exportação de produtos
       await window.electron.invoke("export-products-data", dbPath);
-    } catch (error: any) {
-      setMessage(`Erro: ${error.message}`);
+      setSuccess("Arquivo exportado com sucesso");
+      setMessage("")
+    } catch (error) {
+      console.log('error', error);
+      if (error instanceof Error) {
+        if (error.message.includes('reply was never sent')) {
+          setMessage("Não foi possível salvar o arquivo. Parece que você já tem um arquivo aberto com o mesmo nome. Feche o arquivo e tente novamente.");
+          return;
+        }
+        setMessage(error.message);
+      } else {
+        setMessage(`Erro inesperado: ${String(error)}`);
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -63,43 +85,88 @@ const App: React.FC = () => {
     try {
       await window.electron.invoke("export-customers-data", dbPath);
     } catch (error: any) {
-      setMessage(`Erro: ${error.message}`);
-      setLoading(false);
+      setMessage(`${error.message}`);
+    } finally {
+      setLoading(false)
     }
   };
 
   useEffect(() => {
-    const handleExportSuccess = (
-      _event: any,
-      buffer: ArrayBuffer,
-      type: string
-    ) => {
+    const onStart = (_e: any, total: number) => setProgress({ processed: 0, total });
+
+    const onProgress = (_e: any, processed: number, total: number) =>
+      setProgress({ processed, total });
+
+    const onSaving = (_e: any, filePath: string) => {
+      setSaving(true);
+    }
+
+    const onSuccess = (_e: any, buffer: ArrayBuffer, type: string) => {
       setLoading(false);
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${type}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-      setSuccess("Arquivo exportado com sucesso");
+      setSaving(false);
+      setProgress(null);
+      setSuccess('Arquivo exportado com sucesso!');
     };
 
-    const handleExportError = (_event: any, errorMessage: string) => {
+    const onError = (_e: any, errorMessage: string) => {
+      setLoading(false);
+      setSaving(false);
+      setProgress(null);
+      console.log('errorMessage', errorMessage);
+      if (errorMessage.includes('reply was never sent')) {
+        setMessage("Não foi possível salvar o arquivo. Parece que você já tem um arquivo aberto com o mesmo nome. Feche o arquivo e tente novamente.");
+      }
       setMessage(`Erro: ${errorMessage}`);
-      setLoading(false);
     };
 
-    window.electron.on("export-success", handleExportSuccess);
-    window.electron.on("export-error", handleExportError);
+    window.electron.on('export-start', onStart);
+    window.electron.on('export-progress', onProgress);
+    window.electron.on('export-saving', onSaving);
+    window.electron.on('export-success', onSuccess);
+    window.electron.on('export-error', onError);
 
     return () => {
-      window.electron.removeListener("export-success", handleExportSuccess);
-      window.electron.removeListener("export-error", handleExportError);
+      window.electron.removeListener('export-start', onStart);
+      window.electron.removeListener('export-progress', onProgress);
+      window.electron.removeListener('export-saving', onSaving);
+      window.electron.removeListener('export-success', onSuccess);
+      window.electron.removeListener('export-error', onError);
     };
+
   }, []);
+
+  // useEffect(() => {
+  //   const handleExportSuccess = (
+  //     _event: any,
+  //     buffer: ArrayBuffer,
+  //     type: string
+  //   ) => {
+  //     setLoading(false);
+  //     const blob = new Blob([buffer], {
+  //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //     });
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = `${type}.xlsx`;
+  //     a.click();
+  //     URL.revokeObjectURL(url);
+  //     setSuccess("Arquivo exportado com sucesso");
+  //   };
+
+  //   const handleExportError = (_event: any, errorMessage: string) => {
+  //     setMessage(`Erro: ${errorMessage}`);
+  //     setLoading(false);
+  //   };
+
+  //   window.electron.on("export-success", handleExportSuccess);
+  //   window.electron.on("export-error", handleExportError);
+
+  //   return () => {
+  //     window.electron.removeListener("export-success", handleExportSuccess);
+  //     window.electron.removeListener("export-error", handleExportError);
+  //   };
+  // }, []);
 
   return (
     <div className="container">
@@ -150,11 +217,36 @@ const App: React.FC = () => {
       </form>
       <div
         id="message"
-        className={message ? "error" : success ? "success" : ""}
+        className={message.length > 1 ? "error" : success ? "success" : ""}
       >
         {loading && (
           <div className="progress">
-            <span className="progress-title">Por favor, aguarde...</span>
+            {progress ? (
+              <>
+                {!saving ? (
+                  <>
+                    <span className="progress-title">
+                      Exportando {progress.processed} / {progress.total} registros…
+                    </span>
+                    <progress
+                      value={progress.processed}
+                      max={progress.total}
+                      className="progress-bar"
+                    />
+                  </>
+                ) : (
+                  <div className="save-box">
+                    <span className="progress-title">Salvando o arquivo...</span>
+                    <div className="spinner">
+                      <div className="double-bounce1"></div>
+                      <div className="double-bounce2"></div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <span className="progress-title">Por favor, aguarde…</span>
+            )}
           </div>
         )}
         {success && <span className="message">{success}</span>}
