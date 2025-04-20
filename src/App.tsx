@@ -47,6 +47,13 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCanceled = () => {
+    setLoading(false);
+    setSaving(false);
+    setProgress(null);
+    setMessage("Exportação cancelada com sucesso.");
+  };
+
   const handleExportProducts = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
@@ -91,6 +98,19 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCancelExport = async () => {
+    const cancel = await window.electron.invoke("cancel-export");
+    if (cancel) {
+      setLoading(false);
+      setSaving(false);
+      setProgress(null);
+      setMessage("Exportação cancelada com sucesso.");
+      setTimeout(() => {
+        setMessage("");
+      }, 2000);
+    }
+  }
+
   useEffect(() => {
     const onStart = (_e: any, total: number) => setProgress({ processed: 0, total });
 
@@ -124,6 +144,7 @@ const App: React.FC = () => {
     window.electron.on('export-saving', onSaving);
     window.electron.on('export-success', onSuccess);
     window.electron.on('export-error', onError);
+    window.electron.on('export-cancelled', handleCanceled);
 
     return () => {
       window.electron.removeListener('export-start', onStart);
@@ -131,42 +152,12 @@ const App: React.FC = () => {
       window.electron.removeListener('export-saving', onSaving);
       window.electron.removeListener('export-success', onSuccess);
       window.electron.removeListener('export-error', onError);
+      window.electron.removeListener('export-cancelled', handleCanceled);
     };
 
   }, []);
 
-  // useEffect(() => {
-  //   const handleExportSuccess = (
-  //     _event: any,
-  //     buffer: ArrayBuffer,
-  //     type: string
-  //   ) => {
-  //     setLoading(false);
-  //     const blob = new Blob([buffer], {
-  //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //     });
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = `${type}.xlsx`;
-  //     a.click();
-  //     URL.revokeObjectURL(url);
-  //     setSuccess("Arquivo exportado com sucesso");
-  //   };
 
-  //   const handleExportError = (_event: any, errorMessage: string) => {
-  //     setMessage(`Erro: ${errorMessage}`);
-  //     setLoading(false);
-  //   };
-
-  //   window.electron.on("export-success", handleExportSuccess);
-  //   window.electron.on("export-error", handleExportError);
-
-  //   return () => {
-  //     window.electron.removeListener("export-success", handleExportSuccess);
-  //     window.electron.removeListener("export-error", handleExportError);
-  //   };
-  // }, []);
 
   return (
     <div className="container">
@@ -193,6 +184,7 @@ const App: React.FC = () => {
           type="button"
           onClick={handleSelectDatabase}
           className="button button-info"
+          disabled={loading || saving}
         >
           <FontAwesomeIcon icon={faFolderOpen} className="icon-with-margin" />
           Selecionar Banco de Dados
@@ -213,6 +205,15 @@ const App: React.FC = () => {
         >
           <FontAwesomeIcon icon={faUsers} className="icon-with-margin" />
           Exportar Clientes
+        </button>
+        <button
+          type="button"
+          onClick={handleCancelExport}
+          className="button button-danger"
+          disabled={!loading || !saving}
+        >
+          <FontAwesomeIcon icon={faBox} className="icon-with-margin" />
+          Cancelar
         </button>
       </form>
       <div

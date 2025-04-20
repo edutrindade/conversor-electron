@@ -5,9 +5,8 @@ import path from "path";
 import fs from 'node:fs';
 import { fileURLToPath } from "url";
 import { connectToDatabase } from "./src/helpers/database.js";
-import { exportProductsToExcel } from "./src/utils/excel/products.js";
 import { exportCustomersToExcel } from "./src/utils/excel/customers.js";
-import { queryProducts, queryProductsBase } from "./src/utils/scripts/products.js";
+import { queryProductsBase } from "./src/utils/scripts/products.js";
 import { queryCustomers } from "./src/utils/scripts/customers.js";
 import { isValidCNPJ, isValidCPF, generateRandomCPF } from "./src/utils/validations.js";
 import { createProductColumns } from "./src/utils/excel/columns/products.js";
@@ -339,6 +338,20 @@ ipcMain.handle("get-total-rows", async (_event, dbPath) => {
       console.error("Erro desconhecido ao contar linhas");
       throw new Error("Erro desconhecido ao contar linhas");
     }
+  }
+});
+
+ipcMain.handle("cancel-export", async (event) => {
+  const result = await dialog.showMessageBox({
+    type: "warning",
+    title: "Cancelar Exportação",
+    message: "Você tem certeza que deseja cancelar a exportação?",
+    buttons: ["Sim", "Não"],
+  });
+
+  if (result.response === 0) {
+    event.sender.send("export-cancelled");
+    return true;
   }
 });
 
