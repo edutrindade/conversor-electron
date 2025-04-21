@@ -6,12 +6,10 @@ import fs from 'node:fs';
 import { fileURLToPath } from "url";
 import { connectToDatabase } from "./src/helpers/database.js";
 import { exportCustomersToExcel } from "./src/utils/excel/customers.js";
-import { queryProductsBase } from "./src/utils/scripts/products.js";
+import { queryProductsBase, queryProductsBaseWithoutSG } from "./src/utils/scripts/products.js";
 import { queryCustomers } from "./src/utils/scripts/customers.js";
 import { isValidCNPJ, isValidCPF, generateRandomCPF } from "./src/utils/validations.js";
 import { createProductColumns } from "./src/utils/excel/columns/products.js";
-
-const BATCH_SIZE = 5000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -196,25 +194,48 @@ ipcMain.handle("export-products-data", async (event, dbPath) => {
       Status: "status",
     };
 
+    /* 3. Determina o tamanho do lote dinamicamente --------------------------*/
+    let BATCH_SIZE;
+    if (TOTAL <= 2000) {
+      BATCH_SIZE = 200;
+    } else if (TOTAL <= 10000) {
+      BATCH_SIZE = 500;
+    } else {
+      BATCH_SIZE = 1000;
+    }
+
     /* 4. Lê e grava lotes --------------------------------------------------*/
     let totalRows = 0;
-    for await (const rows of fetchBatches(db, BATCH_SIZE)) {
-      rows.forEach((row) => {
-        const mappedRow = {};
-        for (const [key, value] of Object.entries(row)) {
-          if (keyMap[key]) {
-            mappedRow[keyMap[key]] = value != null ? value.toString() : "";
+    try {
+      for await (const rows of fetchBatches(db, BATCH_SIZE)) {
+        rows.forEach((row, index) => {
+          const mappedRow = {};
+          for (const [key, value] of Object.entries(row)) {
+            if (keyMap[key]) {
+              mappedRow[keyMap[key]] = value != null ? value.toString() : "";
+            }
           }
-        }
-        worksheet.addRow(mappedRow);
-      });
+          worksheet.addRow(mappedRow);
 
-      totalRows += rows.length;
-      event.sender.send('export-progress', totalRows, TOTAL);
+          totalRows++;
+
+          if (index % 10 === 0) { // Ajuste este valor conforme necessário
+            event.sender.send('export-progress', totalRows, TOTAL);
+          }
+        });
+
+        //totalRows += rows.length;
+        event.sender.send('export-progress', totalRows, TOTAL);
+      }
+    } catch (err) {
+      console.error(`Erro ao processar os dados: ${err.message}`);
+      event.sender.send('export-error', err.message);
+      fs.rmSync(tmpPath, { force: true });
+      throw err;
     }
 
     if (totalRows === 0) {
-      console.warn("Nenhuma linha de dados foi processada.");
+      console.log("Nenhuma linha de dados foi processada.");
     }
 
     worksheet.getRow(1).font = { bold: true };
@@ -357,12 +378,14 @@ ipcMain.handle("cancel-export", async (event) => {
 
 async function* fetchBatches(db, limit = 5000) {
   let offset = 0;
-  const base = `${queryProductsBase}`;
+  const base = `${queryProductsBaseWithoutSG}`;
 
   while (true) {
     const sql = `${base} ROWS ${offset + 1} TO ${offset + limit}`;
+    console.log("Lendo lote de ", offset + 1, " a ", offset + limit);
+    console.log("SQL: ", sql);
     const rows = await queryPromise(db, sql);
-    console.log('Lendo lote de ', rows.length, ' linhas');
+    console.log("Lote lido: ", rows.length, " registros.");
     if (rows.length === 0) break;
     yield rows;
     offset += limit;

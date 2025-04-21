@@ -136,6 +136,9 @@ const App: React.FC = () => {
       if (errorMessage.includes('reply was never sent')) {
         setMessage("Não foi possível salvar o arquivo. Parece que você já tem um arquivo aberto com o mesmo nome. Feche o arquivo e tente novamente.");
       }
+      if (errorMessage.includes('Sort error')) {
+        setMessage("Erro de ordenação. Verifique se o banco de dados está correto e tente novamente.");
+      }
       setMessage(`Erro: ${errorMessage}`);
     };
 
@@ -210,7 +213,7 @@ const App: React.FC = () => {
           type="button"
           onClick={handleCancelExport}
           className="button button-danger"
-          disabled={!loading || !saving}
+          disabled={!loading && !saving}
         >
           <FontAwesomeIcon icon={faBox} className="icon-with-margin" />
           Cancelar
